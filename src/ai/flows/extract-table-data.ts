@@ -36,20 +36,27 @@ const prompt = ai.definePrompt({
   name: 'extractTableDataPrompt',
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
-  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract all table data from the image.
+  prompt: `You are an expert OCR and table extraction system. Your primary task is to extract data from the table in the provided image with the HIGHEST ACCURACY, ensuring that the content of each cell is preserved and correctly placed in its original row and column structure.
 
-Output format requirements:
-1.  The very first column in your output **MUST** be labeled "SL. NO." in the header.
-2.  **Content for the "SL. NO." column:**
-    *   **If the image already contains a column that clearly functions as a serial number or is labeled 'SL. NO.', use the data from that image column for your output's "SL. NO." column.** The header for this column in your output must still be "SL. NO.".
-    *   **If the image does *not* contain such a serial number column, then you MUST generate the "SL. NO." column.** In this case, for the header row, the first cell is "SL. NO.". For all subsequent data rows, the first cell in this column should be the sequential number of that row (starting from 1).
-3.  Include the original header row from the image (it will follow the "SL. NO." column if "SL. NO." was generated, or the image's "SL. NO." data will be the first part of it).
-4.  Each row of the table (including the header) should be on a new line (separated by '\\n').
-5.  Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). This includes the "SL. NO." column.
-6.  Do not use any other delimiters like multiple spaces or pipes for columns.
-7.  Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
-8.  Do not include any introductory text, just the tab-separated table data.
-9.  Rows containing only hyphens or dashes (e.g., "--- --- ---") should be ignored and not included in the output.
+Output Format Rules:
+1.  **Overall Structure:** The output must be the raw table data. Do not include any introductory text, explanations, or summaries.
+2.  **Row Delimiter:** Each row of the table (including the header) must be on a new line (separated by '\\n').
+3.  **Column Delimiter:** Within each row, all cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use multiple spaces or other delimiters.
+4.  **Header Row:** You MUST include the header row from the image.
+5.  **"SL. NO." Column Mandate:**
+    a.  The very first column in your output MUST have the header "SL. NO.".
+    b.  **If the image ALREADY CONTAINS a column that clearly functions as a serial number** (e.g., it's labeled "SL. NO.", "S.No.", "No.", "#", or is the first column with sequential-like numbering):
+        i.  Use the data directly from THIS image column for your output's "SL. NO." column.
+        ii. The header for this first column in your output must be "SL. NO.", even if the original image header for that column was different.
+    c.  **If the image DOES NOT contain a clear serial number column:**
+        i.  You MUST generate the "SL. NO." column.
+        ii. The header for this generated first column is "SL. NO.".
+        iii. For all subsequent data rows (after the header), the value in this "SL. NO." column should be the sequential number of that data row (e.g., 1 for the first data row, 2 for the second, and so on).
+6.  **Data Integrity & Consistency:**
+    a.  All other columns from the image must follow the "SL. NO." column, in their original order.
+    b.  It is CRITICAL that all rows in your output have the exact same number of tab-separated columns.
+    c.  If a cell in the original image table is empty, represent it as an empty string ("") in your output to maintain column alignment. Do not omit it.
+7.  **Filtering Unwanted Rows:** Ignore and do not include any rows that consist purely of decorative lines or separators (e.g., rows like "--- --- ---", "=== === ===", or similar).
 
 Image: {{media url=photoDataUri}}`,
 });
@@ -65,4 +72,3 @@ const extractTableDataFlow = ai.defineFlow(
     return output!;
   }
 );
-
