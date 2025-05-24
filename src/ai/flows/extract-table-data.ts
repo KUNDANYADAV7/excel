@@ -37,7 +37,6 @@ const prompt = ai.definePrompt({
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
   prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract the table data from the image and return the data as a string table.
-Do not include any rows that consist solely of hyphens, dashes, underscores, or similar separator characters.
 
 Image: {{media url=photoDataUri}}`,
 });
