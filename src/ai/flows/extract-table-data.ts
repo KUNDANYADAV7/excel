@@ -25,7 +25,7 @@ const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
     .describe(
-      'The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). CRITICALLY: Any cell containing a long sequence of digits (e.g., credit card numbers, account numbers) must be represented as a literal string of those digits, without conversion to scientific notation or any other numeric format that would alter its representation or precision.'
+      'The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t).'
     ),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
@@ -46,7 +46,6 @@ Output Format Rules:
 3.  **Column Delimiter and Cell Content Integrity:**
     a. Within each row, all cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use multiple spaces or other delimiters.
     b. **Crucial for Accuracy:** Text that visually appears as a single logical unit or entry within what seems to be one cell in the image, even if it contains internal spaces (e.g., full addresses, multi-word descriptions, product codes like "MM 51 71 54 C", or phone numbers with spaces), MUST be kept together as a single column's value. Do not split these based on internal spaces. The visual grouping in the image is paramount for determining cell content. Infer column boundaries based on the overall table structure and alignment, not just internal spaces within a visually distinct cell.
-    c. **Number Handling (CRITICAL):** Long sequences of digits, such as credit card numbers, account numbers, or ID numbers, MUST be extracted as literal text strings, exactly as they appear. DO NOT convert them to scientific notation, floating-point numbers, or any other numerical format that might alter their representation or precision. For example, if a cell contains "1234567890123456", output "1234567890123456", not "1.23E+15".
 4.  **Header Row Exclusion:** You MUST NOT include the header row from the image in your output. Only include the data rows.
 5.  **Data Integrity & Consistent Column Count:**
     a.  It is CRITICAL that all rows in your output have the exact same number of tab-separated columns. Determine the number of columns based on the clearest row structure in the image and apply this count consistently to all data rows.
@@ -67,4 +66,3 @@ const extractTableDataFlow = ai.defineFlow(
     return output!;
   }
 );
-
