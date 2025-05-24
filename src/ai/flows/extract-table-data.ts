@@ -24,7 +24,7 @@ export type ExtractTableDataInput = z.infer<typeof ExtractTableDataInputSchema>;
 const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
-    .describe('The extracted table data as a string. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). The header row should be excluded.'),
+    .describe('The extracted table data as a string. The header row from the image MUST be included as the first line. The first column of the output MUST be the "SL. NO." column (or similarly named serial number column from the image) with its data taken directly from the image. All rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t).'),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
 
@@ -36,15 +36,24 @@ const prompt = ai.definePrompt({
   name: 'extractTableDataPrompt',
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
-  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract the table data from the image, but **DO NOT include the header row (the first row of the table)** in your output.
+  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Your task is to extract the table data accurately, ensuring all original columns and rows are preserved as per the visual layout in the image.
 
-Output format requirements:
-- Each row of the table (excluding the header) should be on a new line (separated by '\\n').
-- Within each row, cell values (columns) MUST be separated by a single tab character ('\\t').
-- Do not use any other delimiters like multiple spaces or pipes for columns.
-- Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
-- Do not include any introductory text, just the tab-separated table data.
-- Rows containing only hyphens or dashes (e.g., "--- --- ---") should be ignored and not included in the output.
+Specific requirements:
+1.  **Include Header Row**: The header row (the first row of the table in the image, containing column titles) MUST be included as the first line of your output.
+2.  **"SL. NO." Column Handling**:
+    *   The first column in your output MUST correspond to the serial number column from the image (e.g., "SL. NO.", "S.No.", "#", or a similar sequential identifier).
+    *   The header for this first column in your output should be exactly what is in the image (e.g., "SL. NO.").
+    *   The serial numbers (or values) for this column MUST be extracted directly from the image.
+3.  **Output Format**:
+    *   Each row of the table (including the header) should be on a new line (separated by '\\n').
+    *   Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use any other delimiters like multiple spaces or pipes for columns.
+4.  **Data Integrity and Consistency**:
+    *   Ensure all output rows (including the header) have a consistent number of tab-separated columns, corresponding to the visual columns in the image. If a cell is visually empty in the image, represent it as an empty string in the output to maintain column structure.
+    *   Text that visually appears as a single logical unit or entry within a cell (e.g., multi-word names, addresses, item codes with spaces, phone numbers with spaces like "078 0729") MUST be kept together as a single column's value. Do NOT split them based on internal spaces.
+    *   Long sequences of digits (like credit card numbers, ID numbers, or account numbers) MUST be extracted as literal text and not converted to scientific notation or any other altered numerical format. Preserve them exactly as they appear.
+5.  **Clean Output**:
+    *   Do not include any introductory text, explanations, or summaries. Output ONLY the tab-separated table data.
+    *   Rows from the image that consist *only* of hyphens, dashes, or similar horizontal decorative lines (e.g., "--- --- ---") should be ignored and NOT included in the output.
 
 Image: {{media url=photoDataUri}}`,
 });
