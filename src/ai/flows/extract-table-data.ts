@@ -25,7 +25,7 @@ const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
     .describe(
-      'The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t).'
+      'The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). Text that visually appears as a single logical unit or entry within what seems to be one cell in the image, even if it contains internal spaces (e.g., "123 Main St", "Product A B"), MUST be kept together as a single column\'s value. Long sequences of digits (like credit card numbers) must be preserved as literal text and not converted to scientific notation.'
     ),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
@@ -41,16 +41,21 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert OCR and table extraction system. Your primary task is to extract data from the table in the provided image with the HIGHEST ACCURACY, ensuring that the content of each cell is preserved and correctly placed in its original row and column structure.
 
 Output Format Rules:
-1.  **Overall Structure:** The output must be the raw table data. Do not include any introductory text, explanations, or summaries.
-2.  **Row Delimiter:** Each row of the table must be on a new line (separated by '\\n').
-3.  **Column Delimiter and Cell Content Integrity:**
-    a. Within each row, all cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use multiple spaces or other delimiters.
-    b. **Crucial for Accuracy:** Text that visually appears as a single logical unit or entry within what seems to be one cell in the image, even if it contains internal spaces (e.g., full addresses, multi-word descriptions, product codes like "MM 51 71 54 C", or phone numbers with spaces), MUST be kept together as a single column's value. Do not split these based on internal spaces. The visual grouping in the image is paramount for determining cell content. Infer column boundaries based on the overall table structure and alignment, not just internal spaces within a visually distinct cell.
-4.  **Header Row Exclusion:** You MUST NOT include the header row from the image in your output. Only include the data rows.
-5.  **Data Integrity & Consistent Column Count:**
-    a.  It is CRITICAL that all rows in your output have the exact same number of tab-separated columns. Determine the number of columns based on the clearest row structure in the image and apply this count consistently to all data rows.
-    b.  If a cell in the original image table is visibly empty, represent it as an empty string ("") in your output to maintain column alignment. Do not omit it.
-6.  **Filtering Unwanted Rows:** Ignore and do not include any rows that consist purely of decorative lines or separators (e.g., rows like "--- --- ---", "=== === ===", or similar).
+1.  **Overall Structure:** Raw table data only. No introductory text, explanations, or summaries.
+2.  **Row Delimiter:** Each row on a new line (separated by '\\n').
+3.  **Column Delimiter:** Single tab character ('\\t') between columns.
+4.  **Cell Content Integrity (CRITICAL - DO NOT SPLIT CELLS):**
+    *   If a piece of text in the image *visually appears to belong to a single cell*, it MUST be treated as a single column's value.
+    *   This applies even if the text contains internal spaces (e.g., "New York", "Product Code A B C", "(123) 456-7890", "MM 51 71 54 C").
+    *   **DO NOT split these values into multiple columns.**
+    *   Infer column boundaries based on the overall table structure and visual alignment across multiple rows, NOT by splitting text within a cell simply because it contains spaces.
+5.  **Header Row Exclusion:** DO NOT include the header row from the image. Output data rows only.
+6.  **Consistent Column Count (CRUCIAL):**
+    *   First, determine the correct number of columns based on the clearest and most consistent row structure and visual alignment in the entire image.
+    *   Then, ensure ALL output data rows have this exact same number of tab-separated columns.
+    *   If a cell in the original image table is visibly empty, represent it as an empty string ("") in your output to maintain column alignment. Do not omit it.
+7.  **Filtering Unwanted Rows:** Ignore and do not include any rows that consist purely of decorative lines or separators (e.g., rows like "--- --- ---", "=== === ===", or similar).
+8.  **Number Handling (CRITICAL):** When extracting numbers, especially long sequences of digits (like credit card numbers, account numbers, phone numbers without standard formatting), you MUST output them as the exact literal text string seen in the image. DO NOT convert them to scientific notation (e.g., 1.23E+10) or any other numeric format. Preserve leading zeros if present.
 
 Image: {{media url=photoDataUri}}`,
 });
