@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -36,7 +37,6 @@ const prompt = ai.definePrompt({
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
   prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract the table data from the image and return the data as a string table.
-IMPORTANT: Omit any header or data rows that consist solely of hyphens ('---') or similar decorative separators. Focus only on rows with actual data or meaningful column headers.
 
 Image: {{media url=photoDataUri}}`,
 });
