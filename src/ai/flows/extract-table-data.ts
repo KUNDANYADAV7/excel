@@ -47,18 +47,14 @@ Key Instructions:
 4.  **Row Delimiter:** Each row on a new line (separated by '\\n').
 5.  **Column Delimiter:** Single tab character ('\\t') between columns.
 6.  **Consistent Column Count (CRUCIAL):**
-    *   First, analyze the entire image to determine the correct number of columns based on the visual layout of the header and data rows. For the provided example image, the columns are "SL. NO.", "GivenName", "Surname", "Gender", "StreetAddress", "City", "ZipCode", "EmailAddress", "TelephoneNumber", "Birthday", "CCType", "CCNumber", "CCExpires", "NationalID". Ensure that simple text fields like 'GivenName' and 'Surname' are also correctly delineated based on visual column boundaries, even if they are single words.
-    *   Once determined, ensure ALL output data rows, including the header, strictly adhere to this exact number of tab-separated columns.
+    *   First, analyze the entire image to determine the correct number of columns based on the visual layout of the header and data rows. For an image with columns like "SL. NO.", "GivenName", "Surname", you should identify exactly 3 columns.
+    *   Once determined, ensure ALL output data rows, including the header, strictly adhere to this exact number of tab-separated columns. For example, each row should have "SL. NO."\t"GivenName"\t"Surname".
     *   If a cell in the original image table is visibly empty or contains no discernible text, represent it as an empty string ("") to maintain column alignment. Do not omit it. This is critical for data integrity.
-7.  **Cell Content Integrity (ULTRA-CRITICAL - DO NOT SPLIT CELLS BASED ON INTERNAL SPACES):**
+    *   Ensure that simple text fields like 'GivenName' and 'Surname' are correctly delineated based on visual column boundaries, even if they are single words. If OCR text shows "David" on one line and "Holran" on the next, but visually "Holran" is the surname for "David" in the same row, your output must be "SL.NO._Value\tDavid\tHolran".
+7.  **Cell Content Integrity (ULTRA-CRITICAL - DO NOT SPLIT CELLS BASED ON INTERNAL SPACES OR MISINTERPRET OCR LINE BREAKS):**
     *   If a piece of text in the image *visually appears to belong to a single cell*, it MUST be treated as a single column's value. This is the most important rule.
-    *   This applies even if the text contains internal spaces. Examples from the image to treat as single cell values:
-        *   "GRINDELF S3Q 7RQ" (City and ZipCode combined in one visual cell if applicable, or keep as separate columns if they are visually distinct columns)
-        *   "078 0771 6729" or "070 68210627" (TelephoneNumber)
-        *   "Wednesday, October 05, 1994" (Birthday)
-        *   "MM 51 71 54 C" (NationalID)
-        *   "MM/YY" format for CCExpires.
-    *   **DO NOT split these values into multiple columns.** You must infer column boundaries based on the overall table structure and visual alignment across multiple rows in the IMAGE, NOT by splitting text within what is visually a single cell simply because it contains spaces or other characters. The goal is an exact transcription of the cell's content as it appears visually.
+    *   This applies even if the text contains internal spaces or if raw OCR splits it across lines. Examples from various images to treat as single cell values: "GRINDELF S3Q 7RQ", "078 0771 6729" or "070 68210627", "Wednesday, October 05, 1994", "MM 51 71 54 C", "MM/YY".
+    *   **DO NOT split these values into multiple columns.** You must infer column boundaries based on the overall table structure and visual alignment across multiple rows in the IMAGE, NOT by splitting text within what is visually a single cell simply because it contains spaces or because the OCR text is imperfectly formatted. The goal is an exact transcription of the cell's content as it appears visually.
 8.  **Filtering Unwanted Rows:** Ignore and do not include any rows that consist purely of decorative lines or separators (e.g., rows like "--- --- ---", "=== === ===", or similar).
 9.  **Number and Data Handling (CRITICAL):**
     *   When extracting numbers, especially long sequences of digits (like credit card numbers, account numbers), you MUST output them as the exact literal text string seen in the image. DO NOT convert them to scientific notation (e.g., 1.23E+10) or any other numeric format. Preserve leading zeros if present.
@@ -78,3 +74,4 @@ const extractTableDataFlow = ai.defineFlow(
     return output!;
   }
 );
+
