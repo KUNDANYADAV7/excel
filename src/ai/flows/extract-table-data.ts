@@ -24,7 +24,9 @@ export type ExtractTableDataInput = z.infer<typeof ExtractTableDataInputSchema>;
 const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
-    .describe('The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t).'),
+    .describe(
+      'The extracted table data as a string, EXCLUDING the header row. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). CRITICALLY: Any cell containing a long sequence of digits (e.g., credit card numbers, account numbers) must be represented as a literal string of those digits, without conversion to scientific notation or any other numeric format that would alter its representation or precision.'
+    ),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
 
