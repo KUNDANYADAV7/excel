@@ -24,7 +24,7 @@ export type ExtractTableDataInput = z.infer<typeof ExtractTableDataInputSchema>;
 const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
-    .describe('The extracted table data as a string, formatted as a table.'),
+    .describe('The extracted table data as a string. Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t).'),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
 
@@ -36,7 +36,14 @@ const prompt = ai.definePrompt({
   name: 'extractTableDataPrompt',
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
-  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract the table data from the image and return the data as a string table.
+  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract the table data from the image.
+
+Output format requirements:
+- Each row of the table should be on a new line (separated by '\\n').
+- Within each row, cell values (columns) MUST be separated by a single tab character ('\\t').
+- Do not use any other delimiters like multiple spaces or pipes for columns.
+- Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
+- Do not include any introductory text, just the tab-separated table data.
 
 Image: {{media url=photoDataUri}}`,
 });

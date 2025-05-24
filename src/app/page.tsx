@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, type ChangeEvent, useEffect } from "react";
@@ -118,19 +119,7 @@ export default function TabularVisionPage() {
     try {
       const rows = extractedTableData.trim().split('\n');
       const csvContent = rows.map(rowStr => {
-        // Try splitting by multiple spaces, then by tab, then by pipe. This is heuristic.
-        let columns = rowStr.split(/\s{2,}/); // Split by 2+ spaces
-        if (columns.length === 1 && rowStr.includes('\t')) {
-          columns = rowStr.split('\t'); // Split by tab
-        }
-        if (columns.length === 1 && rowStr.includes('|')) {
-          columns = rowStr.split('|').map(cell => cell.trim()); // Split by pipe and trim
-           // Remove empty columns that might result from leading/trailing pipes
-          if (columns.length > 1 && columns[0] === "") columns.shift();
-          if (columns.length > 1 && columns[columns.length -1] === "") columns.pop();
-        }
-
-
+        const columns = rowStr.split('\t'); // Data is now expected to be tab-separated
         return columns.map(cell => {
           const trimmedCell = cell.trim();
           // Escape double quotes and wrap cell in double quotes if it contains comma, newline, or double quote
