@@ -47,7 +47,7 @@ Key Instructions:
 4.  **Row Delimiter:** Each row on a new line (separated by '\\n').
 5.  **Column Delimiter:** Single tab character ('\\t') between columns.
 6.  **Consistent Column Count (CRUCIAL):**
-    *   First, analyze the entire image to determine the correct number of columns based on the visual layout of the header and data rows. For the provided example image, the columns are "SL. NO.", "GivenName", "Surname", "Gender", "StreetAddress", "City", "ZipCode", "EmailAddress", "TelephoneNumber", "Birthday", "CCType", "CCNumber", "CCExpires", "NationalID".
+    *   First, analyze the entire image to determine the correct number of columns based on the visual layout of the header and data rows. For the provided example image, the columns are "SL. NO.", "GivenName", "Surname", "Gender", "StreetAddress", "City", "ZipCode", "EmailAddress", "TelephoneNumber", "Birthday", "CCType", "CCNumber", "CCExpires", "NationalID". Ensure that simple text fields like 'GivenName' and 'Surname' are also correctly delineated based on visual column boundaries, even if they are single words.
     *   Once determined, ensure ALL output data rows, including the header, strictly adhere to this exact number of tab-separated columns.
     *   If a cell in the original image table is visibly empty or contains no discernible text, represent it as an empty string ("") to maintain column alignment. Do not omit it. This is critical for data integrity.
 7.  **Cell Content Integrity (ULTRA-CRITICAL - DO NOT SPLIT CELLS BASED ON INTERNAL SPACES):**
