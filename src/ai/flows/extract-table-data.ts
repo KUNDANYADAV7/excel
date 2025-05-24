@@ -72,4 +72,3 @@ const extractTableDataFlow = ai.defineFlow(
     return output!;
   }
 );
-
