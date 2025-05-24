@@ -42,11 +42,13 @@ const prompt = ai.definePrompt({
 
 1.  **Include Header Row:** You MUST include the header row (the first row of the table) in your output.
 2.  **SL. NO. Column:** The first column of your output MUST correspond to the serial number column from the image (e.g., 'SL. NO.', 'S.No.', '#'). Extract the header and data for this column directly from the image. If the image uses a different name for its serial number column (like 'S.No.' or '#'), use that name as the header for the first column in your output.
-3.  **Cell Content Integrity (CRITICAL):**
-    *   Text that visually forms a single logical unit or entry within a cell in the image (e.g., phone numbers like '078 0771' or '077 8239' in the TelephoneNumber column, multi-part NationalID like 'MM 51 71 54 C', Street Addresses, City names like 'UPPER AST', or ZipCodes like '$30 7RQ') MUST be kept together as a single column's value.
-    *   DO NOT split such entries into multiple columns merely because they contain spaces or because the OCR might present them awkwardly. You must infer column boundaries based on the overall table structure and consistent visual alignment across multiple rows, not by simply splitting text based on spaces within a cell. For example, if "TelephoneNumber" in the image is "078 0771", it must be a single cell in the output, not split into "078" and "0771" across two columns.
-4.  **No Skipped Columns:** Extract ALL columns and their values present in the image. Ensure your output reflects every column visible in the source table.
-5.  **Consistent Column Count:** All output rows (including the header) MUST have the exact same number of tab-separated columns. If a cell is visually empty in the image, represent it as an empty string in the output to maintain this structural consistency. For the provided image, the expected columns are typically: SL. NO., GivenName, Surname, Gender, StreetAddr, City, ZipCode, EmailAddr, TelephoneNumber, Birthday, CCType, CCNumber, CCExpires, NationalID.
+3.  **Cell Content Integrity (CRITICAL - Pay Close Attention):**
+    *   The most common and critical error is incorrectly splitting content that visually belongs in a single cell into multiple columns. This happens when text within a cell contains spaces (e.g., "078 0771" in a TelephoneNumber column). **This error MUST be avoided to ensure data accuracy.**
+    *   First, determine the table's column boundaries based on clear visual separators in the image and the structure of the header row.
+    *   Once these boundaries are established, you must assign the *entire text string* that visually occupies a single cell in the image to its corresponding single column in the output.
+    *   **Crucial Example for TelephoneNumber:** If a cell in the "TelephoneNumber" column visually contains "078 0771", then the *entire string "078 0771"* is the value for that single cell in your output. It MUST NOT be split into "078" in one column and "0771" in another. The space is part of the phone number data, NOT a column delimiter. This principle applies universally to all similar cases (e.g., multi-part NationalID like 'MM 51 71 54 C', Street Addresses like '123 Main St', City names with spaces like 'UPPER AST', or ZipCodes like '$30 7RQ').
+4.  **No Skipped Columns:** Extract ALL columns and their values present in the image. Ensure your output reflects every column visible in the source table. If a column seems empty in some rows but has data in others or in the header, it is still a column.
+5.  **Consistent Column Count:** All output rows (including the header) MUST have the exact same number of tab-separated columns. This number is determined by the visual structure of the table and its header. If a cell is visually empty in the image, represent it as an empty string in the output to maintain this structural consistency. For the provided image, the expected columns are typically: SL. NO., GivenName, Surname, Gender, StreetAddr, City, ZipCode, EmailAddr, TelephoneNumber, Birthday, CCType, CCNumber, CCExpires, NationalID.
 6.  **Number Handling:** Treat long sequences of digits (like credit card numbers in CCNumber) as literal text. Do NOT convert them to scientific notation or any other numerical format that alters their string representation.
 
 **Output Format Requirements:**
@@ -70,3 +72,4 @@ const extractTableDataFlow = ai.defineFlow(
     return output!;
   }
 );
+
