@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type ChangeEvent, useEffect } from "react";
+import { useState, type ChangeEvent, useEffect, useCallback } from "react";
 import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { extractTableData } from "@/ai/flows/extract-table-data";
 import { LoadingSpinner } from "@/components/icons/loading-spinner";
-import { UploadCloud, Copy, Download, AlertCircle, CheckCircle } from "lucide-react";
+import { UploadCloud, Copy, Download, AlertCircle, CheckCircle, ClipboardPaste } from "lucide-react";
 
 export default function TabularVisionPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -29,31 +29,38 @@ export default function TabularVisionPage() {
     };
   }, [imagePreviewUrl]);
 
+  const processFile = (file: File) => {
+    if (file.size > 4 * 1024 * 1024) { // Max 4MB for Gemini
+      setError("Image size should be less than 4MB.");
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description: "Image size should be less than 4MB.",
+      });
+      setImageFile(null);
+      setImagePreviewUrl(null);
+      setExtractedTableData(null);
+      return;
+    }
+    
+    setImageFile(file);
+    setError(null);
+    setExtractedTableData(null);
+
+    const previewUrl = URL.createObjectURL(file);
+    if (imagePreviewUrl) { // Revoke previous if exists
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImagePreviewUrl(previewUrl);
+
+    // Automatically trigger extraction
+    handleExtractData(file);
+  };
+
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 4 * 1024 * 1024) { // Max 4MB for Gemini
-        setError("Image size should be less than 4MB.");
-        toast({
-          variant: "destructive",
-          title: "Upload Error",
-          description: "Image size should be less than 4MB.",
-        });
-        setImageFile(null);
-        setImagePreviewUrl(null);
-        setExtractedTableData(null);
-        return;
-      }
-      
-      setImageFile(file);
-      setError(null);
-      setExtractedTableData(null);
-
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreviewUrl(previewUrl);
-
-      // Automatically trigger extraction
-      handleExtractData(file);
+      processFile(file);
     }
   };
 
@@ -119,10 +126,9 @@ export default function TabularVisionPage() {
     try {
       const rows = extractedTableData.trim().split('\n');
       const csvContent = rows.map(rowStr => {
-        const columns = rowStr.split('\t'); // Data is now expected to be tab-separated
+        const columns = rowStr.split('\t'); 
         return columns.map(cell => {
           const trimmedCell = cell.trim();
-          // Escape double quotes and wrap cell in double quotes if it contains comma, newline, or double quote
           if (trimmedCell.includes(',') || trimmedCell.includes('\n') || trimmedCell.includes('"')) {
             return `"${trimmedCell.replace(/"/g, '""')}"`;
           }
@@ -146,6 +152,37 @@ export default function TabularVisionPage() {
       toast({ variant: "destructive", title: "Download Failed", description: "Could not generate or download CSV file." });
     }
   };
+
+  const handlePaste = useCallback(async (event: ClipboardEvent) => {
+    if (isLoading) return;
+
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+          // Prevent default paste behavior (e.g., pasting into an input field if focused)
+          event.preventDefault(); 
+          toast({
+            title: "Image Pasted",
+            description: "Processing pasted image...",
+            action: <ClipboardPaste className="text-blue-500" />
+          });
+          processFile(new File([blob], `pasted-image-${Date.now()}.${blob.type.split('/')[1] || 'png'}`, { type: blob.type }));
+          return; // Process first image found
+        }
+      }
+    }
+  }, [isLoading, toast, imagePreviewUrl]); // Added imagePreviewUrl to dependencies
+
+  useEffect(() => {
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
   
 
   return (
@@ -162,7 +199,11 @@ export default function TabularVisionPage() {
               <UploadCloud className="text-primary" size={28} />
               Upload Your Image
             </CardTitle>
-            <CardDescription>Select an image file (PNG, JPG, WEBP, etc.) containing a table. Max 4MB.</CardDescription>
+            <CardDescription>
+              Select an image file (PNG, JPG, WEBP, etc.) containing a table. Max 4MB.
+              <br />
+              <span className="text-sm text-primary/80">Tip: You can also paste an image directly (Ctrl+V or Cmd+V).</span>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Input
@@ -198,7 +239,6 @@ export default function TabularVisionPage() {
               <CardTitle>Image Preview</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
-              {/* Using NextImage for optimized images, but <img> is fine for object URLs */}
               <img src={imagePreviewUrl} alt="Uploaded table preview" className="max-w-full max-h-96 rounded-md border object-contain" />
             </CardContent>
           </Card>
