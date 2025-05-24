@@ -24,7 +24,7 @@ export type ExtractTableDataInput = z.infer<typeof ExtractTableDataInputSchema>;
 const ExtractTableDataOutputSchema = z.object({
   tableData: z
     .string()
-    .describe('The extracted table data as a string. The first column is "Serial No.". Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). The header row IS included.'),
+    .describe('The extracted table data as a string. The first column is "SL. NO.". Rows are separated by newlines (\\n). Columns within each row are separated by tab characters (\\t). The header row IS included.'),
 });
 export type ExtractTableDataOutput = z.infer<typeof ExtractTableDataOutputSchema>;
 
@@ -39,11 +39,11 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract all table data from the image, including the header row.
 
 Output format requirements:
-- The first column of your output MUST be a "Serial No." column.
-- For the header row, the first cell should be "Serial No.".
+- The first column of your output MUST be a "SL. NO." column.
+- For the header row, the first cell should be "SL. NO.".
 - For all subsequent data rows, the first cell should be the sequential number of that row (starting from 1).
 - Each row of the table (including the header) should be on a new line (separated by '\\n').
-- Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). This includes the "Serial No." column.
+- Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). This includes the "SL. NO." column.
 - Do not use any other delimiters like multiple spaces or pipes for columns.
 - Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
 - Do not include any introductory text, just the tab-separated table data.
