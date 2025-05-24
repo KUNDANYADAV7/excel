@@ -36,18 +36,20 @@ const prompt = ai.definePrompt({
   name: 'extractTableDataPrompt',
   input: {schema: ExtractTableDataInputSchema},
   output: {schema: ExtractTableDataOutputSchema},
-  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract all table data from the image, including the header row.
+  prompt: `You are an expert OCR reader, specialized in extracting data from tables in images. Extract all table data from the image.
 
 Output format requirements:
-- The first column of your output MUST be a "SL. NO." column.
-- For the header row, the first cell should be "SL. NO.".
-- For all subsequent data rows, the first cell should be the sequential number of that row (starting from 1).
-- Each row of the table (including the header) should be on a new line (separated by '\\n').
-- Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). This includes the "SL. NO." column.
-- Do not use any other delimiters like multiple spaces or pipes for columns.
-- Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
-- Do not include any introductory text, just the tab-separated table data.
-- Rows containing only hyphens or dashes (e.g., "--- --- ---") should be ignored and not included in the output.
+1.  The very first column in your output **MUST** be labeled "SL. NO." in the header.
+2.  **Content for the "SL. NO." column:**
+    *   **If the image already contains a column that clearly functions as a serial number or is labeled 'SL. NO.', use the data from that image column for your output's "SL. NO." column.** The header for this column in your output must still be "SL. NO.".
+    *   **If the image does *not* contain such a serial number column, then you MUST generate the "SL. NO." column.** In this case, for the header row, the first cell is "SL. NO.". For all subsequent data rows, the first cell in this column should be the sequential number of that row (starting from 1).
+3.  Include the original header row from the image (it will follow the "SL. NO." column if "SL. NO." was generated, or the image's "SL. NO." data will be the first part of it).
+4.  Each row of the table (including the header) should be on a new line (separated by '\\n').
+5.  Within each row, cell values (columns) MUST be separated by a single tab character ('\\t'). This includes the "SL. NO." column.
+6.  Do not use any other delimiters like multiple spaces or pipes for columns.
+7.  Ensure all rows have a consistent number of tab-separated columns, padding with empty strings for empty cells if necessary.
+8.  Do not include any introductory text, just the tab-separated table data.
+9.  Rows containing only hyphens or dashes (e.g., "--- --- ---") should be ignored and not included in the output.
 
 Image: {{media url=photoDataUri}}`,
 });
