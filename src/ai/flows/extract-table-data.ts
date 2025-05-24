@@ -41,11 +41,13 @@ const prompt = ai.definePrompt({
 Output Format Rules:
 1.  **Overall Structure:** The output must be the raw table data. Do not include any introductory text, explanations, or summaries.
 2.  **Row Delimiter:** Each row of the table must be on a new line (separated by '\\n').
-3.  **Column Delimiter:** Within each row, all cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use multiple spaces or other delimiters.
+3.  **Column Delimiter and Cell Content Integrity:**
+    a. Within each row, all cell values (columns) MUST be separated by a single tab character ('\\t'). Do not use multiple spaces or other delimiters.
+    b. **Crucial for Accuracy:** Text that visually appears as a single logical unit or entry within what seems to be one cell in the image, even if it contains internal spaces (e.g., full addresses, multi-word descriptions, product codes like "MM 51 71 54 C", or phone numbers with spaces), MUST be kept together as a single column's value. Do not split these based on internal spaces. The visual grouping in the image is paramount for determining cell content. Infer column boundaries based on the overall table structure and alignment, not just internal spaces within a visually distinct cell.
 4.  **Header Row Exclusion:** You MUST NOT include the header row from the image in your output. Only include the data rows.
-5.  **Data Integrity & Consistency:**
-    a.  It is CRITICAL that all rows in your output have the exact same number of tab-separated columns.
-    b.  If a cell in the original image table is empty, represent it as an empty string ("") in your output to maintain column alignment. Do not omit it.
+5.  **Data Integrity & Consistent Column Count:**
+    a.  It is CRITICAL that all rows in your output have the exact same number of tab-separated columns. Determine the number of columns based on the clearest row structure in the image and apply this count consistently to all data rows.
+    b.  If a cell in the original image table is visibly empty, represent it as an empty string ("") in your output to maintain column alignment. Do not omit it.
 6.  **Filtering Unwanted Rows:** Ignore and do not include any rows that consist purely of decorative lines or separators (e.g., rows like "--- --- ---", "=== === ===", or similar).
 
 Image: {{media url=photoDataUri}}`,
